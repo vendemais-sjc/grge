@@ -1,29 +1,398 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Música</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Música Background</title>
+    <!-- Manifest para PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Music Player">
     <style>
-        body, html {
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
-            background: #000;
+            box-sizing: border-box;
         }
-        
-        iframe {
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #05070f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            padding: 20px;
+        }
+        .player-card {
+            background: rgba(20, 30, 45, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 30px 24px;
             width: 100%;
-            height: 100vh;
+            max-width: 480px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff, #7aa2f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        .sub {
+            color: #8b9dc3;
+            margin-bottom: 32px;
+            font-size: 0.85rem;
+        }
+        .cover {
+            width: 180px;
+            height: 180px;
+            background: #1e2a3a;
+            border-radius: 32px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            transition: 0.2s;
+        }
+        .track-info {
+            margin-bottom: 28px;
+        }
+        .track-name {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 6px;
+        }
+        .artist {
+            color: #9bb5d4;
+            font-size: 1rem;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            margin-bottom: 32px;
+        }
+        button {
+            background: rgba(255,255,255,0.1);
             border: none;
-            display: block;
+            width: 60px;
+            height: 60px;
+            border-radius: 40px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: scale(0.94);
+            background: #2c3e66;
+        }
+        .install-btn {
+            background: #2b6e9e;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            width: auto;
+            font-weight: 500;
+            margin-top: 12px;
+            gap: 8px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .status {
+            background: #00000066;
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            color: #bfd9ff;
+            margin-top: 20px;
+        }
+        .warning {
+            background: #ffb34720;
+            border-left: 3px solid #ffb347;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 0.7rem;
+            color: #ffdb9f;
+            margin-top: 20px;
+            text-align: left;
+        }
+        a {
+            color: #7aa2f7;
+        }
+        @media (max-width: 500px) {
+            .player-card { padding: 20px 16px; }
+            .track-name { font-size: 1.3rem; }
+            button { width: 50px; height: 50px; font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <iframe src="https://03d0163f359d46c9896e66cf988fbb2b.elf.site" 
-            title="Player de Música"
-            allow="autoplay; encrypted-media">
-    </iframe>
+
+<div class="player-card">
+    <h1>🎵 Música Contínua</h1>
+    <div class="sub">Toque com tela bloqueada* (após instalar)</div>
+    
+    <div class="cover" id="coverEmoji">🎧</div>
+    
+    <div class="track-info">
+        <div class="track-name" id="trackName">Faixa Exemplo</div>
+        <div class="artist" id="artistName">Áudio Ambiente</div>
+    </div>
+    
+    <div class="controls">
+        <button id="prevBtn" title="Anterior">⏮️</button>
+        <button id="playPauseBtn" title="Play/Pause">▶️</button>
+        <button id="nextBtn" title="Próxima">⏭️</button>
+    </div>
+
+    <button id="installBtn" class="install-btn" style="display: none;">📲 Instalar App (tela bloqueada)</button>
+    
+    <div class="status" id="statusMsg">⚪ Carregando player...</div>
+    <div class="warning">
+        ⚠️ <strong>Importante para tocar com tela apagada:</strong><br>
+        • <strong>Android:</strong> Instale este app (botão "Instalar" ou "Adicionar à tela inicial"). Após instalado, abra pelo ícone e toque em Play. O áudio continuará mesmo com tela bloqueada por até ~30 min (varia por fabricante).<br>
+        • <strong>iPhone/iOS:</strong> não é possível manter áudio com tela bloqueada via PWA ou navegador. Apenas apps nativos da App Store têm essa permissão.<br>
+        • Se o áudio parar, abra o app novamente e aperte Play.
+    </div>
+</div>
+
+<script>
+    // Lista de músicas (substitua pelas suas URLs .mp3, .m4a, .ogg, ou streaming)
+    // IMPORTANTE: Use URLs compatíveis com CORS e que permitam acesso direto.
+    const playlist = [
+        { name: "LoFi Relax", artist: "Estudo Foco", url: "https://cdn.pixabay.com/download/audio/2022/10/25/audio_9f4b5e8c5a.mp3?filename=lofi-study-112191.mp3", cover: "🎧" },
+        { name: "Chillhop Beat", artist: "Jazz Vibes", url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf6f2.mp3?filename=chill-hop-112180.mp3", cover: "🎷" },
+        { name: "Nature Sound", artist: "Floresta", url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_6e4b3a6f4a.mp3?filename=forest-birds-108443.mp3", cover: "🌿" }
+    ];
+    
+    let currentTrack = 0;
+    let audio = null;
+    let isPlaying = false;
+    let wakeLock = null;
+    
+    // Elementos
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const trackNameEl = document.getElementById('trackName');
+    const artistNameEl = document.getElementById('artistName');
+    const coverEmoji = document.getElementById('coverEmoji');
+    const statusMsg = document.getElementById('statusMsg');
+    const installBtn = document.getElementById('installBtn');
+    
+    // Inicializa áudio
+    function initAudio() {
+        if (audio) {
+            audio.pause();
+            audio.src = '';
+        }
+        audio = new Audio();
+        audio.src = playlist[currentTrack].url;
+        audio.loop = false;    // não loop, para ir para próxima automaticamente
+        audio.crossOrigin = "anonymous";
+        
+        // Eventos para controle automático
+        audio.addEventListener('ended', () => {
+            nextTrack();
+        });
+        
+        audio.addEventListener('canplay', () => {
+            if (isPlaying) {
+                audio.play().catch(e => console.warn("AutoPlay bloqueado:", e));
+            }
+            statusMsg.innerText = `✅ Pronto: ${playlist[currentTrack].name}`;
+        });
+        
+        audio.addEventListener('error', (e) => {
+            console.error("Erro no áudio", e);
+            statusMsg.innerText = `❌ Erro ao carregar a música. Verifique a URL.`;
+        });
+        
+        // Atualiza UI
+        trackNameEl.innerText = playlist[currentTrack].name;
+        artistNameEl.innerText = playlist[currentTrack].artist;
+        coverEmoji.innerText = playlist[currentTrack].cover || "🎵";
+    }
+    
+    async function playAudio() {
+        if (!audio) initAudio();
+        try {
+            await audio.play();
+            isPlaying = true;
+            playPauseBtn.innerHTML = '⏸️';
+            statusMsg.innerText = `🎵 Tocando: ${playlist[currentTrack].name} | Bloqueio de tela? Instale o app.`;
+            // Tenta manter wake lock (tela ligada, não resolve bloqueio, mas ajuda)
+            requestWakeLock();
+        } catch (err) {
+            console.warn("Play falhou:", err);
+            isPlaying = false;
+            playPauseBtn.innerHTML = '▶️';
+            statusMsg.innerText = `⚠️ Toque manual necessário. Clique em Play. (Restrição do navegador)`;
+        }
+    }
+    
+    function pauseAudio() {
+        if (audio) {
+            audio.pause();
+            isPlaying = false;
+            playPauseBtn.innerHTML = '▶️';
+            statusMsg.innerText = `⏸️ Pausado: ${playlist[currentTrack].name}`;
+            releaseWakeLock();
+        }
+    }
+    
+    function togglePlay() {
+        if (!audio) initAudio();
+        if (isPlaying) {
+            pauseAudio();
+        } else {
+            playAudio();
+        }
+    }
+    
+    function nextTrack() {
+        currentTrack = (currentTrack + 1) % playlist.length;
+        const wasPlaying = isPlaying;
+        if (wasPlaying) {
+            pauseAudio();
+        }
+        initAudio();
+        if (wasPlaying) {
+            playAudio();
+        } else {
+            // atualiza info mesmo parado
+            trackNameEl.innerText = playlist[currentTrack].name;
+            artistNameEl.innerText = playlist[currentTrack].artist;
+            coverEmoji.innerText = playlist[currentTrack].cover || "🎵";
+            statusMsg.innerText = `⏹️ Pronto: ${playlist[currentTrack].name}`;
+        }
+    }
+    
+    function prevTrack() {
+        currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
+        const wasPlaying = isPlaying;
+        if (wasPlaying) {
+            pauseAudio();
+        }
+        initAudio();
+        if (wasPlaying) {
+            playAudio();
+        } else {
+            trackNameEl.innerText = playlist[currentTrack].name;
+            artistNameEl.innerText = playlist[currentTrack].artist;
+            coverEmoji.innerText = playlist[currentTrack].cover || "🎵";
+            statusMsg.innerText = `⏹️ Pronto: ${playlist[currentTrack].name}`;
+        }
+    }
+    
+    // Wake Lock para evitar tela desligar (não resolve áudio com tela apagada, mas útil)
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator && !wakeLock) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock released');
+                });
+                console.log('Wake Lock ativo');
+            } catch (err) {
+                console.warn('Wake Lock não suportado:', err);
+            }
+        }
+    }
+    function releaseWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().catch(console.warn);
+            wakeLock = null;
+        }
+    }
+    
+    // PWA: mostrar botão de instalação
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'inline-flex';
+    });
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                installBtn.style.display = 'none';
+                statusMsg.innerText = '✅ App instalado! Agora teste tocar com tela bloqueada.';
+            }
+            deferredPrompt = null;
+        }
+    });
+    
+    // Event listeners
+    playPauseBtn.addEventListener('click', togglePlay);
+    prevBtn.addEventListener('click', prevTrack);
+    nextBtn.addEventListener('click', nextTrack);
+    
+    // Inicializar
+    initAudio();
+    
+    // Dica: Para iOS, o áudio só pode ser iniciado após interação do usuário
+    // Por isso não chamamos play() automaticamente.
+    statusMsg.innerText = `🎧 Clique em Play. Depois de instalar o app, rode em segundo plano.`;
+    
+    // Recuperar wake lock quando a página ficar visível novamente
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && isPlaying) {
+            requestWakeLock();
+        }
+    });
+    
+    // Limpeza antes de sair
+    window.addEventListener('beforeunload', () => {
+        if (audio) audio.pause();
+        releaseWakeLock();
+    });
+</script>
+
+<script>
+    // Criação dinâmica do manifest.json e service worker (apenas para PWA)
+    (function setupPWA() {
+        const manifestObj = {
+            name: "Music Background Player",
+            short_name: "MusicPlayer",
+            start_url: ".",
+            display: "standalone",
+            theme_color: "#000000",
+            background_color: "#000000",
+            icons: [
+                { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle fill='%232b6e9e' cx='50' cy='50' r='50'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white'%3E🎵%3C/text%3E%3C/svg%3E", sizes: "any", type: "image/svg+xml" }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const linkManifest = document.querySelector('link[rel="manifest"]');
+        if (linkManifest) linkManifest.href = manifestURL;
+        
+        // Service Worker simples para cache e permitir instalação
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('fetch', event => { event.respondWith(fetch(event.request)); });`;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swURL = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swURL).then(reg => {
+                console.log('Service Worker registrado', reg);
+            }).catch(err => console.warn('SW falhou:', err));
+        }
+    })();
+</script>
 </body>
 </html>
